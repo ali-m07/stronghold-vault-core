@@ -2,6 +2,8 @@
 
 The isomorphic encryption core used by Stronghold. It derives 256-bit keys with Argon2id and encrypts versioned vault files with XChaCha20-Poly1305.
 
+The default Argon2id cost is three passes over 64 MiB. KDF parameters and their memory unit are stored in every encrypted envelope.
+
 > Security notice: this package has not received an independent security audit. Do not use it as the sole protection for production credentials yet.
 
 ## Install

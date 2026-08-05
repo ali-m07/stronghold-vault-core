@@ -16,8 +16,17 @@ import {
   newEntryId,
   createEmptyVault,
 } from "../src/index.js";
+import { kdfMemoryBytes } from "../src/kdf.js";
 
 const MASTER = "correct horse battery staple";
+
+test("new KDF parameters allocate the documented 64 MiB", async () => {
+  const params = await createKdfParams();
+  assert.equal(params.memoryUnit, "kib");
+  assert.equal(kdfMemoryBytes(params), 64 * 1024 * 1024);
+  // v0.1.0 envelopes omitted the marker and retain their legacy byte meaning.
+  assert.equal(kdfMemoryBytes({ memorySize: 65536 }), 65536);
+});
 
 test("round-trip: create → lock → unlock preserves entries", async () => {
   const vault = await UnlockedVault.create(MASTER);
