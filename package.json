@@ -1,0 +1,46 @@
+{
+  "name": "@ali-m07/stronghold-vault-core",
+  "version": "0.1.0",
+  "description": "The crypto heart of stronghold — Argon2id KDF + XChaCha20-Poly1305 cipher, shared between browser extension and Node CLI",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ali-m07/stronghold-vault-core.git"
+  },
+  "homepage": "https://github.com/ali-m07/stronghold-vault-core#readme",
+  "bugs": "https://github.com/ali-m07/stronghold-vault-core/issues",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepack": "npm run build",
+    "test": "node --test --import tsx tests/vault.test.ts",
+    "typecheck": "tsc --noEmit",
+    "cli": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "libsodium-wrappers-sumo": "^0.8.4"
+  },
+  "devDependencies": {
+    "@types/libsodium-wrappers": "^0.7.14",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://npm.pkg.github.com"
+  }
+}
