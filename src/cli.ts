@@ -27,11 +27,44 @@ function question(prompt: string): Promise<string> {
   return rl.question(prompt).finally(() => rl.close());
 }
 
-/** Read a password without echoing it to the terminal (best-effort on Windows). */
+/** Read a password from a TTY without echoing secret characters. */
 async function readPassword(prompt: string): Promise<string> {
-  // node:readline doesn't mute echo portably. We fall back to a plain prompt;
-  // for real use the extension's popup is the primary interface anyway.
-  return question(prompt);
+  if (!input.isTTY || typeof input.setRawMode !== "function") {
+    // Piped input is already controlled by the caller and has no terminal echo.
+    return question(prompt);
+  }
+
+  output.write(prompt);
+  return new Promise((resolve, reject) => {
+    let password = "";
+    const wasRaw = input.isRaw;
+
+    const cleanup = (): void => {
+      input.off("data", onData);
+      input.setRawMode(Boolean(wasRaw));
+      input.pause();
+      output.write("\n");
+    };
+
+    const onData = (chunk: Buffer): void => {
+      const value = chunk.toString("utf8");
+      if (value === "\r" || value === "\n") {
+        cleanup();
+        resolve(password);
+      } else if (value === "\u0003") {
+        cleanup();
+        reject(new Error("Password entry cancelled."));
+      } else if (value === "\u007f" || value === "\b") {
+        password = password.slice(0, -1);
+      } else if (!value.startsWith("\u001b")) {
+        password += value;
+      }
+    };
+
+    input.setRawMode(true);
+    input.resume();
+    input.on("data", onData);
+  });
 }
 
 async function readVaultFile(): Promise<LockedVault> {
@@ -40,7 +73,11 @@ async function readVaultFile(): Promise<LockedVault> {
 }
 
 async function writeVaultFile(locked: LockedVault): Promise<void> {
-  await fs.writeFile(VAULT_PATH, JSON.stringify(locked, null, 2), "utf8");
+  await fs.writeFile(VAULT_PATH, JSON.stringify(locked, null, 2), {
+    encoding: "utf8",
+    mode: 0o600,
+  });
+  await fs.chmod(VAULT_PATH, 0o600).catch(() => undefined);
 }
 
 async function cmdInit(): Promise<void> {
@@ -50,8 +87,8 @@ async function cmdInit(): Promise<void> {
     console.error("Passwords do not match.");
     process.exit(1);
   }
-  if (master.length < 8) {
-    console.error("Master password must be at least 8 characters.");
+  if (master.length < 12) {
+    console.error("Master password must be at least 12 characters.");
     process.exit(1);
   }
   const vault = await UnlockedVault.create(master);

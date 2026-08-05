@@ -1,6 +1,6 @@
 {
   "name": "@ali-m07/stronghold-vault-core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "The crypto heart of stronghold — Argon2id KDF + XChaCha20-Poly1305 cipher, shared between browser extension and Node CLI",
   "license": "MIT",
   "repository": {
